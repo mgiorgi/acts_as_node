@@ -1,0 +1,3 @@
+# ActsAsNode
+module ActsAsNode
+end

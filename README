@@ -1,0 +1,54 @@
+ActsAsNode
+==========
+
+This is Rails plugin for graph drawing of models. It enables you render a graph drawing (with 2 different layouts, available) based on the relationships of the models underneath.
+
+Installation
+------------
+
+First of all, you got to download the plugin in the following way:
+
+./script/plugin install http://acts-as-node.googlecode.com/svn/trunk/acts-as-node
+
+Then, the plugin needs to generate the necesesary files and assets with the generate command:
+
+./script/generate acts_as_node
+
+Finally, we got to define a route for the plugin, that will be used to generate an intermediate xml file which is the input for the graph drawing algorithm. The route should look like this:
+
+#config/routes.rb
+map.graph_generator '/graph_generator', :controller => "acts_as_node", :action => "generate_graph"
+
+That's all we need to get started. Now we can just try it out!
+
+Usage
+-----
+
+First of all, you have to add the following line to the application's layout file (or where you want to use it):
+
+#app/views/layout/application.rhtml
+..
+<%= javascript_include_tag :acts_as_node %>
+..
+
+Then, all you have to do is use the graph_drawing helper. For that matter, I am going to explain the graph_drawing helper signature to understand how it works:
+
+graph_drawing class_name, root_id, optional_parameters
+
+The parameters represents:
+
+    * class_name. The model name of the root of the graph. (Eg. :ProductCategory)
+    * root_id. The id of root instance that will generate the graph (Eg: 1)
+
+There is a long list of optional_parameters, that I'll describe here:
+
+    * depth. The depth of the graph involved, counting from the root node.
+    * layout. This enable us to set which layout we want to render the graph. The available options are: :SnowflakeLayout & :ForceDirectedLayout.
+    * content. The DOM elment's id that will contain the drawing. If this value is not set, it will be add to document.body object.
+    * childRadius. The lenght of the edge between nodes
+    * fanAngle. The angle between silbling nodes, applies only for the Snowflake layout.
+    * mass. This value represents the mass of each node for the algorithm, it is used to calculate the forces & the separation between the nodes, applies only for ForceDirected layout (default value: 0.3)
+    * children_accesors. This is an important parameter, it indicates which methods of the model we will invoked to inspect for children nodes. It MUST be defined as a hash like the following: { :ProductCategory => [:children, :compaines] }. In this example, the graph_drawing helper will inspect the children's and companies's collections of the ProductCategory instances that the algorithm reaches.
+    * children_fields. This enables the algorithm to set the appropiate title, content & picture attributes of the nodes. For example, in the followin definition for children_fields => { :ProductCategory => { :title => :name, :content => :description, :picture => :picture_uri}, the graph_drawing helper will render all ProductCategory nodes with a tooltip that contains a title assosiated with the name field of the instance, the content of the tooltip will be the value of description field of the instance, and the node itself will be rendered with the image provided by the picture_uri field.
+    * image_width. This parameter enables you to set the width of the image for the pictures of the nodes.
+    * image_height. Likewise The same concept of image_width related to the height of the pictures.

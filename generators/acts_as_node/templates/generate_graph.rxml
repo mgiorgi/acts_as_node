@@ -1,0 +1,82 @@
+xml.instruct!
+
+def get_class(node)
+  @children_accessors.keys.each  { |klass|
+    if (node.kind_of?(klass.to_s.constantize))
+      return klass
+    end
+  }
+  node.class.to_s
+end
+
+def visit_node(node)
+  klass = get_class(node)
+  @visited[klass.to_sym] << node.id
+end
+
+def was_visited(node)
+  visited = false
+  klass = get_class(node)
+  @visited[klass.to_sym] = [] if @visited[klass.to_sym] == nil
+  @visited[klass.to_sym].each { |id| visited = visited or node.id == id  }
+  visited
+end
+
+def get_content(node)
+  klass = get_class(node)
+  if @children_fields[klass.to_sym].blank? or @children_fields[klass.to_sym][:content].blank?
+    content = ""
+  else
+    content = node.send(@children_fields[klass.to_sym][:content].to_sym)
+  end
+  content
+end
+
+def get_title(node)
+  klass = get_class(node)
+  if @children_fields[klass.to_sym].blank? or @children_fields[klass.to_sym][:title].blank?
+   title = ""
+  else
+   title = node.send(@children_fields[klass.to_sym][:title].to_sym)
+  end
+  title
+end
+
+def get_picture(node)
+  klass = get_class(node)
+  picture = ""
+  picture = node.send(@children_fields[klass.to_sym][:picture].to_sym) unless @children_fields[klass.to_sym][:picture].blank?
+  picture
+end
+
+def insert_node_in_xml(node,xml, depth)
+  xml.node(:color => "#90EE90", :id => "graph_drawing_" + node.class.name + "_" + node.id.to_s, :title => get_title(node), :content => get_content(node), :picture => get_picture(node)) do
+    recursive_calculation(xml, node, depth)
+  end
+end
+
+def recursive_calculation(xml, root, depth)
+  #root_class = get_class(root)
+  current_depth = depth + 1
+  @children_accessors.keys.each  { |klass|
+    if (root.kind_of?(klass.to_s.constantize))
+     children_collection = @children_accessors[klass.to_s.to_sym]
+     children_collection.each { |children_accessor|
+      children = root.send(children_accessor.to_sym)
+      children.each { |node| 
+        unless was_visited(node)
+          visit_node(node)
+          if @depth.blank? || current_depth < @depth.to_i
+	   insert_node_in_xml(node, xml, current_depth)
+          end
+        end
+      }
+     }
+    end
+  }
+end
+
+
+xml.root(:root => "true", :fixed => "true", :color => "#cccccc", :title => get_title(@root), :content => get_content(@root), :picture => get_picture(@root)) do
+  recursive_calculation(xml, @root, 0)
+end

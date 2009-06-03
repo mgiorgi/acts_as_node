@@ -68,7 +68,7 @@ var SnowflakeLayout = function( container, useVectorGraphics ) {
 	}
 
 	// attach an onmousemove event
-	if (window.Event) { document.captureEvents(Event.MOUSEMOVE); }
+	if (window.Event) { if (window.captureEvents) { document.captureEvents(Event.MOUSEMOVE); } }
 	var mouseMoveEvent = new EventHandler( this, this.handleMouseMoveEvent );
 	if (document.addEventListener) {
 		document.addEventListener("mousemove",mouseMoveEvent,false);
